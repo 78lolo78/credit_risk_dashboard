@@ -24,13 +24,13 @@ def main():
     # -----------------------------------------------
     # Configuration of the streamlit page
     # -----------------------------------------------
-    st.set_page_config(page_title='Loan application scoring dashboard',
+    st.set_page_config(page_title='Credit risk _ loan application scoring dashboard',
                        page_icon='🧊',
                        layout='centered',
                        initial_sidebar_state='auto')
     # Display the title
-    st.title('Loan application scoring dashboard')
-    st.subheader("ABDELKARIM HAMEG - Data Scientist")
+    st.title('Credit risk - loan application scoring dashboard')
+    st.subheader("Prêt à dépenser")
 
     # Display the LOGO
     # files = os.listdir('Image_logo')
