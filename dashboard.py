@@ -24,13 +24,14 @@ def main():
     # -----------------------------------------------
     # Configuration of the streamlit page
     # -----------------------------------------------
-    st.set_page_config(page_title='Credit risk _ loan application scoring dashboard',
+    st.set_page_config(page_title='Loan Default Prediction',
                        page_icon='🧊',
                        layout='centered',
                        initial_sidebar_state='auto')
     # Display the title
-    st.title('Credit risk - loan application scoring dashboard')
-    st.subheader("Prêt à dépenser")
+    st.title('Loan Default Prediction')
+    st.subheader("Are you sure your loan applicant is surely going to pay the loan back?💸 "
+                 "This machine learning app will help you to make a prediction to help you with your decision!")
 
     # Display the LOGO
     # files = os.listdir('Image_logo')
@@ -46,18 +47,18 @@ def main():
 
     # Functions
     # ----------
-    def get_list_display_features(f, def_n, key):
+    def get_list_display_features(f, def_n):
         all_feat = f
         n = st.slider("Nb of features to display",
                       min_value=2, max_value=40,
-                      value=def_n, step=None, format=None, key=key)
+                      value=def_n, step=None, format=None)
 
         disp_cols = list(get_features_importances().sort_values(ascending=False).iloc[:n].index)
 
         box_cols = st.multiselect(
             'Choose the features to display:',
             sorted(all_feat),
-            default=disp_cols, key=key)
+            default=disp_cols)
         return box_cols
 
     ###############################################################################
@@ -363,9 +364,9 @@ def main():
                 # Get features names
                 features = feat()
                 # Get selected columns
-                disp_box_cols = get_list_display_features(features, 2, key=45)
+                disp_box_cols = get_list_display_features(features, 2)
                 # -----------------------------------------------------------------------------------------------
-                # Get tagets and data for : all customers + Applicant customer + 20 neighbors of selected customer
+                # Get targets and data for : all customers + Applicant customer + 20 neighbors of selected customer
                 # -----------------------------------------------------------------------------------------------
                 # neighbors + Applicant customer :
                 data_neigh, target_neigh = get_data_neigh(selected_id)
@@ -377,12 +378,11 @@ def main():
                 # -------------------------------------------------------------
                 target_neigh = target_neigh.replace({0: 'repaid (neighbors)',
                                                      1: 'not repaid (neighbors)'})
-                target_thousand_neigh = target_thousand_neigh.replace({0: 'repaid (neighbors)',
-                                                                       1: 'not repaid (neighbors)'})
                 y_cust = y_cust.replace({0: 'repaid (customer)',
                                          1: 'not repaid (customer)'})
 
                 # y_cust.rename(columns={'10006':'TARGET'}, inplace=True)
+                
                 # ------------------------------
                 # Get 1000 neighbors personal data
                 # ------------------------------
