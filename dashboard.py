@@ -24,14 +24,14 @@ def main():
     # -----------------------------------------------
     # Configuration of the streamlit page
     # -----------------------------------------------
-    st.set_page_config(page_title='Loan Default Prediction',
+    st.set_page_config(page_title='Prédiction de défaut de remboursement de prêt',
                        page_icon='🧊',
                        layout='centered',
                        initial_sidebar_state='auto')
     # Display the title
-    st.title('Loan Default Prediction')
-    st.subheader("Are you sure your loan applicant is surely going to pay the loan back?💸 "
-                 "This machine learning app will help you to make a prediction to help you with your decision!")
+    st.title('Prédiction de défaut de remboursement de prêt')
+    st.subheader("Vérifions si le client demandeur d'un prêt est en capacité de remboursement au moment de la demande?💸 "
+                 "Cette application de machine learning va vous aider à faire une prédiction pour vous aider dans la prise de décision!")
 
     # Display the LOGO
     # files = os.listdir('Image_logo')
@@ -44,6 +44,25 @@ def main():
     # for file in files:
     img = Image.open("loan.png")
     st.image(img, width=100)
+
+    # ====================================================================
+    # FOOTER
+    # ====================================================================
+    html_line="""
+    <br>
+    <br>
+    <br>
+    <br>
+    <hr style= "  display: block;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: inset;
+    border-width: 1.5px;">
+    <p style="color:Gray; text-align: right; font-size:12px;">Auteur : Laurent Cagniart - 01/2023</p>
+    """
+    st.markdown(html_line, unsafe_allow_html=True)
 
     # Functions
     # ----------
@@ -78,7 +97,7 @@ def main():
         return id_customers
 
     # Get selected customer's data (cached)
-    # local test api : http://127.0.0.1:5000/app/data_cust/?SK_ID_CURR=165690
+    # local test api : http://127.0.0.1:5000/app/data_cust/?SK_ID_CURR=27141
     data_type = []
 
     @st.cache
@@ -122,7 +141,7 @@ def main():
         return score_model, threshold
 
     # Get list of shap_values (cached)
-    # local test api : http://127.0.0.1:5000/app/shap_val//?SK_ID_CURR=10002
+    # local test api : http://127.0.0.1:5000/app/shap_val//?SK_ID_CURR=27141
     @st.cache
     def values_shap(selected_id):
         # URL of the sk_id API
@@ -187,9 +206,6 @@ def main():
         # convert from JSON format to Python dict
         content = json.loads(response.content.decode('utf-8'))
         # convert data to pd.DataFrame and pd.Series
-        # targ_all_cust = (pd.Series(content['target_all_cust']).rename('TARGET'))
-        # target_select_cust = (pd.Series(content['target_selected_cust']).rename('TARGET'))
-        # data_all_customers = pd.DataFrame(content['data_all_cust'])
         data_neig = pd.DataFrame(content['data_neigh'])
         target_neig = (pd.Series(content['y_neigh']).rename('TARGET'))
         return data_neig, target_neig
@@ -203,9 +219,6 @@ def main():
         # convert from JSON format to Python dict
         content = json.loads(response.content.decode('utf-8'))
         # convert data to pd.DataFrame and pd.Series
-        # targ_all_cust = (pd.Series(content['target_all_cust']).rename('TARGET'))
-        # target_select_cust = (pd.Series(content['target_selected_cust']).rename('TARGET'))
-        # data_all_customers = pd.DataFrame(content['data_all_cust'])
         data_thousand_neig = pd.DataFrame(content['X_thousand_neigh'])
         x_custo = pd.DataFrame(content['x_custom'])
         target_thousand_neig = (pd.Series(content['y_thousand_neigh']).rename('TARGET'))
@@ -217,8 +230,8 @@ def main():
     # list of customer's ID's
     cust_id = get_id_list()
     # Selected customer's ID
-    selected_id = st.sidebar.selectbox('Select customer ID from list:', cust_id, key=18)
-    st.write('Your selected ID = ', selected_id)
+    selected_id = st.sidebar.selectbox('Selectionner ID client dans la liste:', cust_id, key=18)
+    st.write('ID client sélectionné = ', selected_id)
 
     ############################################################################
     #                           Graphics Functions
@@ -246,37 +259,30 @@ def main():
         scor = int(scor * 100)
         th = int(th * 100)
 
-        if scor >= th:
-            couleur_delta = 'red'
-        elif scor < th:
-            couleur_delta = 'Orange'
-
-        if scor >= th:
-            valeur_delta = "red"
-        elif scor < th:
-            valeur_delta = "green"
-
         fig = go.Figure(go.Indicator(
             mode="gauge+number+delta",
             value=scor,
             domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Selected Customer Score", 'font': {'size': 25}},
-            delta={'reference': int(th), 'increasing': {'color': valeur_delta}},
+            title={'text': "Probabilité de défaut du client", 'font': {'size': 25}},
+            delta={'reference': int(th), 'increasing': {'color': 'Crimson'}, 'decreasing': {'color': 'Green'}},
             gauge={
-                'axis': {'range': [None, int(100)], 'tickwidth': 1.5, 'tickcolor': "black"},
-                'bar': {'color': "darkblue"},
-                'bgcolor': "white",
+                'axis': {'range': [None, int(100)], 'tickwidth': 3, 'tickcolor': 'darkblue'},
+                'bar': {'color': 'white', 'thickness': 0.25},
+                'bgcolor': 'white',
                 'borderwidth': 2,
-                'bordercolor': "gray",
+                'bordercolor': 'gray',
                 'steps': [
-                    {'range': [0, int(th)], 'color': 'lightgreen'},
-                    {'range': [int(th), int(scor)], 'color': couleur_delta}],
+                    {'range': [0, 20], 'color': 'LimeGreen'},
+                    {'range': [20, int(th) - 5], 'color': 'Green'},
+                    {'range': [int(th) - 5, int(th) +5], 'color': 'Orange'},
+                    {'range': [int(th) + 5, 75], 'color': 'red'},
+                    {'range': [75, 100], 'color': 'Crimson'}],
                 'threshold': {
-                    'line': {'color': "red", 'width': 4},
-                    'thickness': 1,
-                    'value': int(th)}}))
+                    'line': {'color': 'white', 'width': 10},
+                    'thickness': 0.8,
+                    'value': int(scor)}}))
 
-        fig.update_layout(paper_bgcolor="lavender", font={'color': "darkblue", 'family': "Arial"})
+        fig.update_layout(paper_bgcolor='white', font={'color': "darkblue", 'family': "Arial"}, margin=dict(l=0, r=0, b=0, t=0, pad=0))
         return fig
 
 
@@ -284,26 +290,25 @@ def main():
     ##############################################################################
     #                         Customer's data checkbox
     ##############################################################################
-    if st.sidebar.checkbox("Customer's data"):
-        st.markdown('data of the selected customer :')
+    if st.sidebar.checkbox("Données Client"):
+        st.markdown('Données du client sélectionné :')
         data_selected_cust, y_cust = get_selected_cust_data(selected_id)
-        # data_selected_cust.columns = data_selected_cust.columns.str.split('.').str[0]
         st.write(data_selected_cust)
     ##############################################################################
     #                         Model's decision checkbox
     ##############################################################################
-    if st.sidebar.checkbox("Model's decision", key=38):
+    if st.sidebar.checkbox("Décision du modèle", key=38):
         # Get score & threshold model
         score, threshold_model = get_score_model(selected_id)
         # Display score (default probability)
-        st.write('Default probability : {:.0f}%'.format(score * 100))
+        st.write('Probabilité de défaut : {:.0f}%'.format(score * 100))
         # Display default threshold
-        st.write('Default model threshold : {:.0f}%'.format(threshold_model * 100))  #
+        #st.write('Seuil de probabilité de défaut du modèle : {:.0f}%'.format(threshold_model * 100))  #
         # Compute decision according to the best threshold (False= loan accepted, True=loan refused)
         if score >= threshold_model:
-            decision = "Loan rejected"
+            decision = "Crédit rejeté"
         else:
-            decision = "Loan granted"
+            decision = "Crédit accordé"
         st.write("Decision :", decision)
         ##########################################################################
         #              Display customer's gauge meter chart (checkbox)
@@ -311,16 +316,16 @@ def main():
         figure = gauge_plot(score, threshold_model)
         st.write(figure)
         # Add markdown
-        st.markdown('_Gauge meter plot for the applicant customer._')
-        expander = st.expander("Concerning the classification model...")
-        expander.write("The prediction was made using the Light Gradient Boosting classifier Model")
-        expander.write("The default model is calculated to maximize air under ROC curve => maximize \
-                                        True Positives rate (TP) detection and minimize False Negatives rate (FP)")
+        st.markdown('_Jauge - probabilité de défaut pour le client sélectionné._')
+        st.markdown('_le chiffre à côté du triangle indique l écart par rapport au seuil de classification._')
+        expander = st.expander("A propos du modèle de classification...")
+        expander.write("La prédiction a été réalisée en utilisant un modèle de classification dit Light Gradient Boosting Model")
+        
         ##########################################################################
         #                 Display local SHAP waterfall checkbox
         ##########################################################################
-        if st.checkbox('Display waterfall local interpretation', key=25):
-            with st.spinner('SHAP waterfall plots displaying in progress..... Please wait.......'):
+        if st.checkbox('Montrer l interprétation locale de la prédiction par SHAP waterfall plot', key=25):
+            with st.spinner('SHAP waterfall plots en cours de construction..... Merci de patienter.......'):
                 # Get Shap values for customer & expected values
                 shap_vals, expected_vals = values_shap(selected_id)
                 # index_cust = customer_ind(selected_id)
@@ -340,25 +345,26 @@ def main():
                 plt.gcf()
                 st.pyplot(plt.gcf())
                 # Add markdown
-                st.markdown('_SHAP waterfall Plot for the applicant customer._')
+                st.markdown('_SHAP waterfall Plot pour le client sélectionné._')
                 # Add details title
-                expander = st.expander("Concerning the SHAP waterfall  plot...")
+                expander = st.expander("Explication sur le SHAP waterfall  plot...")
                 # Add explanations
-                expander.write("The above waterfall  plot displays \
-                explanations for the individual prediction of the applicant customer.\
-                The bottom of a waterfall plot starts as the expected value of the model output \
-                (i.e. the value obtained if no information (features) were provided), and then \
-                each row shows how the positive (red) or negative (blue) contribution of \
-                each feature moves the value from the expected model output over the \
-                background dataset to the model output for this prediction.")
+                expander.write("Le SHAP waterfall  plot ci-dessus montre \
+                comment est construite la prédiction individuelle du client sélectionné.\
+                Le bas du graphique commence par la valeur attendue en sortie du modèle \
+                (i.e. la valeur obtenue si aucune information sur les features étaient fournies), et ensuite \
+                chaque ligne montre la contribution négative (rouge) ou positive (bleue) \
+                (Remarque: plus le score est élevé, plus le risque de défaut est élevé) \
+                chaque feature déplace la valeur courante par rapport à la valeur attendue selon le dataset \
+                utilisé pour la modélisation et la prédiction.")
 
         ##########################################################################
         #              Display feature's distribution (Boxplots)
         ##########################################################################
-        if st.checkbox('show features distribution by class', key=20):
-            st.header('Boxplots of the main features')
+        if st.checkbox('Montrer la distribution des features par classe défaut- non défaut' , key=20):
+            st.header('Boxplots des features principales')
             fig, ax = plt.subplots(figsize=(20, 10))
-            with st.spinner('Boxplot creation in progress...please wait.....'):
+            with st.spinner('Création des Boxplots en cours...merci de patienter.....'):
                 # Get Shap values for customer
                 shap_vals, expected_vals = values_shap(selected_id)
                 # Get features names
@@ -374,7 +380,7 @@ def main():
 
                 x_cust, y_cust = get_selected_cust_data(selected_id)
                 x_customer.columns = x_customer.columns.str.split('.').str[0]
-                # Target impuatation (0 : 'repaid (....), 1 : not repaid (....)
+                # Target imputation (0 : 'repaid (....), 1 : not repaid (....)
                 # -------------------------------------------------------------
                 target_neigh = target_neigh.replace({0: 'repaid (neighbors)',
                                                      1: 'not repaid (neighbors)'})
@@ -427,7 +433,7 @@ def main():
 
                 sns.swarmplot(data=df_melt_sel_cust, x='variables', y='values',
                               linewidth=1, color='y', marker='o', size=20,
-                              edgecolor='k', label='applicant customer', ax=ax)
+                              edgecolor='k', label='client sélectionné', ax=ax)
 
                 # legend
                 h, _ = ax.get_legend_handles_labels()
@@ -441,17 +447,15 @@ def main():
                 plt.xticks(rotation=20, ha='right')
                 plt.show()
 
-                st.markdown('_Dispersion of the main features for random sample,\
-                20 nearest neighbors and applicant customer_')
+                st.markdown('_Distribution des features principales pour la base client (sample),\
+                20 clients similaires et le client sélectionné_')
 
-                expander = st.expander("Concerning the dispersion graph...")
-                expander.write("These boxplots show the dispersion of the preprocessed features values\
-                used by the model to make a prediction. The green boxplot are for the customers that repaid \
-                their loan, and red boxplots are for the customers that didn't repay it.Over the boxplots are\
-                superimposed (markers) the values\
-                of the features for the 20 nearest neighbors of the applicant customer in the training set. The \
-                color of the markers indicate whether or not these neighbors repaid their loan. \
-                Values for the applicant customer are superimposed in yellow.")
+                expander = st.expander("Explications sur les graphiques de distribution...")
+                expander.write("Ces boîtes à moustaches montre la distibution des valeurs des features preprocessées\
+                utilisées par le modèle pour faire la prédiction. La boîte verte montre les clients qui ont remboursé leur prêt \
+                , et la rouge, ceux qui ont été en dafut sur le remboursmeent de leur prêt. Sur ces boîtes, ont été ajoutés\
+                des marqueurs situant précisément les 20 clients similaires (dataset de training) avec le même codage couleur,\
+                le marqueur du client sélectionné est de couleur jaune pour le distinguer.")
 
 
 if __name__ == "__main__":
